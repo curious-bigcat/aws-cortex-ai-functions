@@ -1,0 +1,713 @@
+name: HealthcareAnalytics
+description: >
+  Semantic model for healthcare operations analytics covering patients,
+  appointments, diagnoses, billing, prescriptions, and provider data.
+
+tables:
+  - name: Patients
+    description: Patient demographics and contact information
+    base_table:
+      database: HEALTHCARE_AI_DEMO
+      schema: CORE
+      table: PATIENTS
+    primary_key:
+      columns:
+        - patient_id
+    dimensions:
+      - name: patient_id
+        expr: patient_id
+        data_type: INT
+        description: Unique patient identifier
+      - name: patient_name
+        synonyms:
+          - name
+          - patient
+          - person
+        expr: first_name || ' ' || last_name
+        data_type: VARCHAR
+        description: Full name of the patient
+      - name: first_name
+        expr: first_name
+        data_type: VARCHAR
+        description: Patient first name
+      - name: last_name
+        expr: last_name
+        data_type: VARCHAR
+        description: Patient last name
+      - name: gender
+        synonyms:
+          - sex
+        expr: gender
+        data_type: VARCHAR
+        description: Patient gender
+        is_enum: true
+      - name: blood_type
+        expr: blood_type
+        data_type: VARCHAR
+        description: Blood type
+        is_enum: true
+      - name: insurance_provider
+        synonyms:
+          - insurer
+          - insurance company
+          - payer
+        expr: insurance_provider
+        data_type: VARCHAR
+        description: Health insurance provider name
+        is_enum: true
+      - name: insurance_id
+        expr: insurance_id
+        data_type: VARCHAR
+        description: Insurance policy ID
+      - name: city
+        expr: city
+        data_type: VARCHAR
+        description: Patient city
+      - name: state
+        synonyms:
+          - region
+        expr: state
+        data_type: VARCHAR
+        description: Patient US state (2-letter)
+        is_enum: true
+      - name: zip_code
+        expr: zip_code
+        data_type: VARCHAR
+        description: Patient ZIP code
+    time_dimensions:
+      - name: date_of_birth
+        synonyms:
+          - dob
+          - birthday
+          - birth date
+        expr: date_of_birth
+        data_type: DATE
+        description: Date of birth
+      - name: created_at
+        expr: created_at
+        data_type: TIMESTAMP_NTZ
+        description: When the patient record was created
+    facts:
+      - name: patient_age
+        synonyms:
+          - age
+        expr: DATEDIFF('year', date_of_birth, CURRENT_DATE())
+        data_type: INT
+        description: Current age of the patient in years
+
+  - name: Doctors
+    description: Healthcare provider / physician information
+    base_table:
+      database: HEALTHCARE_AI_DEMO
+      schema: CORE
+      table: DOCTORS
+    primary_key:
+      columns:
+        - doctor_id
+    dimensions:
+      - name: doctor_id
+        expr: doctor_id
+        data_type: INT
+        description: Unique doctor identifier
+      - name: doctor_name
+        synonyms:
+          - provider
+          - physician
+          - dr
+        expr: first_name || ' ' || last_name
+        data_type: VARCHAR
+        description: Full name of the doctor
+      - name: specialty
+        synonyms:
+          - specialization
+          - medical specialty
+        expr: specialty
+        data_type: VARCHAR
+        description: Medical specialty
+        is_enum: true
+      - name: department
+        synonyms:
+          - dept
+          - unit
+        expr: department
+        data_type: VARCHAR
+        description: Hospital department
+        is_enum: true
+
+  - name: Appointments
+    description: Patient appointment records
+    base_table:
+      database: HEALTHCARE_AI_DEMO
+      schema: CORE
+      table: APPOINTMENTS
+    primary_key:
+      columns:
+        - appointment_id
+    dimensions:
+      - name: appointment_id
+        expr: appointment_id
+        data_type: INT
+        description: Unique appointment identifier
+      - name: department
+        synonyms:
+          - dept
+          - clinic
+        expr: department
+        data_type: VARCHAR
+        description: Department for the appointment
+        is_enum: true
+      - name: appointment_type
+        synonyms:
+          - visit type
+          - type of visit
+        expr: appointment_type
+        data_type: VARCHAR
+        description: "Type: checkup, follow-up, emergency, specialist"
+        is_enum: true
+      - name: status
+        synonyms:
+          - appointment status
+        expr: status
+        data_type: VARCHAR
+        description: "Status: scheduled, completed, cancelled, no-show"
+        is_enum: true
+      - name: notes
+        expr: notes
+        data_type: TEXT
+        description: Clinical notes from the appointment
+    time_dimensions:
+      - name: appointment_date
+        synonyms:
+          - visit date
+          - date of visit
+          - when
+        expr: appointment_date
+        data_type: TIMESTAMP_NTZ
+        description: Date and time of the appointment
+    facts:
+      - name: duration_minutes
+        synonyms:
+          - duration
+          - visit length
+          - time spent
+        expr: duration_minutes
+        data_type: INT
+        description: Duration of the appointment in minutes
+    metrics:
+      - name: total_appointments
+        synonyms:
+          - appointment count
+          - number of visits
+          - visit count
+        expr: COUNT(appointment_id)
+        description: Total number of appointments
+      - name: avg_duration
+        synonyms:
+          - average visit length
+        expr: AVG(duration_minutes)
+        description: Average appointment duration in minutes
+      - name: completed_appointments
+        expr: COUNT(CASE WHEN status = 'completed' THEN 1 END)
+        description: Number of completed appointments
+      - name: cancellation_rate
+        synonyms:
+          - no show rate
+        expr: "COUNT(CASE WHEN status IN ('cancelled','no-show') THEN 1 END) * 100.0 / NULLIF(COUNT(appointment_id), 0)"
+        description: Percentage of cancelled or no-show appointments
+    filters:
+      - name: completed_only
+        expr: status = 'completed'
+        description: Only completed appointments
+      - name: scheduled_only
+        expr: status = 'scheduled'
+        description: Only upcoming/scheduled appointments
+
+  - name: Diagnoses
+    description: Patient diagnosis records with ICD codes
+    base_table:
+      database: HEALTHCARE_AI_DEMO
+      schema: CORE
+      table: DIAGNOSES
+    primary_key:
+      columns:
+        - diagnosis_id
+    dimensions:
+      - name: diagnosis_id
+        expr: diagnosis_id
+        data_type: INT
+        description: Unique diagnosis identifier
+      - name: icd_code
+        synonyms:
+          - ICD-10
+          - diagnosis code
+        expr: icd_code
+        data_type: VARCHAR
+        description: ICD-10 diagnosis code
+      - name: diagnosis_name
+        synonyms:
+          - condition
+          - disease
+          - illness
+        expr: diagnosis_name
+        data_type: VARCHAR
+        description: Name of the diagnosis
+      - name: severity
+        synonyms:
+          - how severe
+          - seriousness
+        expr: severity
+        data_type: VARCHAR
+        description: "Severity: mild, moderate, severe, critical"
+        is_enum: true
+      - name: diagnosis_status
+        synonyms:
+          - condition status
+        expr: status
+        data_type: VARCHAR
+        description: "Status: active, resolved, chronic"
+        is_enum: true
+    time_dimensions:
+      - name: diagnosed_at
+        synonyms:
+          - diagnosis date
+          - when diagnosed
+        expr: diagnosed_at
+        data_type: TIMESTAMP_NTZ
+        description: When the diagnosis was made
+      - name: resolved_at
+        expr: resolved_at
+        data_type: TIMESTAMP_NTZ
+        description: When the diagnosis was resolved (NULL if ongoing)
+    metrics:
+      - name: total_diagnoses
+        synonyms:
+          - diagnosis count
+          - number of conditions
+        expr: COUNT(diagnosis_id)
+        description: Total number of diagnoses
+      - name: active_conditions
+        synonyms:
+          - current conditions
+          - ongoing diagnoses
+        expr: COUNT(CASE WHEN status IN ('active', 'chronic') THEN 1 END)
+        description: Number of active or chronic conditions
+      - name: chronic_conditions
+        expr: COUNT(CASE WHEN status = 'chronic' THEN 1 END)
+        description: Number of chronic conditions
+    filters:
+      - name: active_only
+        expr: status = 'active'
+        description: Only active diagnoses
+      - name: chronic_only
+        expr: status = 'chronic'
+        description: Only chronic conditions
+
+  - name: Billing
+    description: Medical billing and payment records
+    base_table:
+      database: HEALTHCARE_AI_DEMO
+      schema: CORE
+      table: BILLING
+    primary_key:
+      columns:
+        - billing_id
+    dimensions:
+      - name: billing_id
+        expr: billing_id
+        data_type: INT
+        description: Unique billing record identifier
+      - name: procedure_code
+        synonyms:
+          - CPT code
+        expr: procedure_code
+        data_type: VARCHAR
+        description: Medical procedure/CPT code
+      - name: procedure_name
+        synonyms:
+          - procedure
+          - service
+          - treatment
+        expr: procedure_name
+        data_type: VARCHAR
+        description: Name of the medical procedure
+      - name: payment_status
+        synonyms:
+          - billing status
+          - paid status
+        expr: payment_status
+        data_type: VARCHAR
+        description: "Payment status: pending, paid, denied, partial"
+        is_enum: true
+    time_dimensions:
+      - name: billed_at
+        synonyms:
+          - billing date
+          - invoice date
+        expr: billed_at
+        data_type: TIMESTAMP_NTZ
+        description: When the bill was created
+      - name: paid_at
+        synonyms:
+          - payment date
+        expr: paid_at
+        data_type: TIMESTAMP_NTZ
+        description: When payment was received
+    facts:
+      - name: total_amount
+        synonyms:
+          - charge
+          - cost
+          - bill amount
+          - price
+        expr: total_amount
+        data_type: DECIMAL
+        description: Total billed amount in dollars
+      - name: insurance_covered
+        synonyms:
+          - insurance payment
+          - covered amount
+        expr: insurance_covered
+        data_type: DECIMAL
+        description: Amount covered by insurance
+      - name: patient_due
+        synonyms:
+          - patient responsibility
+          - copay
+          - out of pocket
+          - patient owes
+        expr: patient_due
+        data_type: DECIMAL
+        description: Amount the patient is responsible for
+    metrics:
+      - name: total_revenue
+        synonyms:
+          - total billing
+          - total charges
+          - revenue
+          - income
+        expr: SUM(total_amount)
+        description: Sum of all billed amounts
+      - name: total_insurance_paid
+        synonyms:
+          - insurance revenue
+        expr: SUM(insurance_covered)
+        description: Total amount paid by insurance
+      - name: total_patient_collections
+        synonyms:
+          - patient payments
+        expr: SUM(patient_due)
+        description: Total patient responsibility amount
+      - name: avg_bill_amount
+        synonyms:
+          - average cost per visit
+          - average charge
+        expr: AVG(total_amount)
+        description: Average billing amount per record
+      - name: outstanding_balance
+        synonyms:
+          - unpaid amount
+          - pending payments
+        expr: SUM(CASE WHEN payment_status = 'pending' THEN total_amount ELSE 0 END)
+        description: Total amount with pending payment status
+      - name: collection_rate
+        expr: "SUM(CASE WHEN payment_status = 'paid' THEN total_amount ELSE 0 END) * 100.0 / NULLIF(SUM(total_amount), 0)"
+        description: Percentage of billed amount that has been collected
+    filters:
+      - name: paid_only
+        expr: payment_status = 'paid'
+        description: Only paid billing records
+      - name: pending_only
+        expr: payment_status = 'pending'
+        description: Only pending billing records
+
+  - name: Prescriptions
+    description: Medication prescriptions for patients
+    base_table:
+      database: HEALTHCARE_AI_DEMO
+      schema: CORE
+      table: PRESCRIPTIONS
+    primary_key:
+      columns:
+        - prescription_id
+    dimensions:
+      - name: prescription_id
+        expr: prescription_id
+        data_type: INT
+        description: Unique prescription identifier
+      - name: medication_name
+        synonyms:
+          - drug
+          - medicine
+          - medication
+          - med
+          - rx
+        expr: medication_name
+        data_type: VARCHAR
+        description: Name of the prescribed medication
+      - name: dosage
+        synonyms:
+          - dose
+        expr: dosage
+        data_type: VARCHAR
+        description: Medication dosage
+      - name: frequency
+        synonyms:
+          - how often
+          - schedule
+        expr: frequency
+        data_type: VARCHAR
+        description: How often the medication should be taken
+      - name: prescription_status
+        expr: status
+        data_type: VARCHAR
+        description: "Status: active, completed, discontinued"
+        is_enum: true
+    time_dimensions:
+      - name: start_date
+        expr: start_date
+        data_type: DATE
+        description: When the prescription starts
+      - name: end_date
+        expr: end_date
+        data_type: DATE
+        description: When the prescription ends
+      - name: prescribed_at
+        synonyms:
+          - prescription date
+        expr: prescribed_at
+        data_type: TIMESTAMP_NTZ
+        description: When the prescription was written
+    facts:
+      - name: refills_remaining
+        synonyms:
+          - refills left
+        expr: refills_remaining
+        data_type: INT
+        description: Number of refills remaining
+    metrics:
+      - name: total_prescriptions
+        synonyms:
+          - prescription count
+          - number of prescriptions
+        expr: COUNT(prescription_id)
+        description: Total number of prescriptions
+      - name: active_prescriptions
+        synonyms:
+          - current medications
+        expr: COUNT(CASE WHEN status = 'active' THEN 1 END)
+        description: Number of currently active prescriptions
+    filters:
+      - name: active_only
+        expr: status = 'active'
+        description: Only active prescriptions
+
+relationships:
+  - name: appointments_to_patients
+    left_table: Appointments
+    right_table: Patients
+    relationship_type: many_to_one
+    join_type: inner
+    relationship_columns:
+      - left_column: patient_id
+        right_column: patient_id
+
+  - name: appointments_to_doctors
+    left_table: Appointments
+    right_table: Doctors
+    relationship_type: many_to_one
+    join_type: inner
+    relationship_columns:
+      - left_column: doctor_id
+        right_column: doctor_id
+
+  - name: diagnoses_to_patients
+    left_table: Diagnoses
+    right_table: Patients
+    relationship_type: many_to_one
+    join_type: inner
+    relationship_columns:
+      - left_column: patient_id
+        right_column: patient_id
+
+  - name: diagnoses_to_appointments
+    left_table: Diagnoses
+    right_table: Appointments
+    relationship_type: many_to_one
+    join_type: inner
+    relationship_columns:
+      - left_column: appointment_id
+        right_column: appointment_id
+
+  - name: diagnoses_to_doctors
+    left_table: Diagnoses
+    right_table: Doctors
+    relationship_type: many_to_one
+    join_type: inner
+    relationship_columns:
+      - left_column: doctor_id
+        right_column: doctor_id
+
+  - name: billing_to_patients
+    left_table: Billing
+    right_table: Patients
+    relationship_type: many_to_one
+    join_type: inner
+    relationship_columns:
+      - left_column: patient_id
+        right_column: patient_id
+
+  - name: billing_to_appointments
+    left_table: Billing
+    right_table: Appointments
+    relationship_type: many_to_one
+    join_type: inner
+    relationship_columns:
+      - left_column: appointment_id
+        right_column: appointment_id
+
+  - name: prescriptions_to_patients
+    left_table: Prescriptions
+    right_table: Patients
+    relationship_type: many_to_one
+    join_type: inner
+    relationship_columns:
+      - left_column: patient_id
+        right_column: patient_id
+
+  - name: prescriptions_to_doctors
+    left_table: Prescriptions
+    right_table: Doctors
+    relationship_type: many_to_one
+    join_type: inner
+    relationship_columns:
+      - left_column: doctor_id
+        right_column: doctor_id
+
+  - name: prescriptions_to_diagnoses
+    left_table: Prescriptions
+    right_table: Diagnoses
+    relationship_type: many_to_one
+    join_type: inner
+    relationship_columns:
+      - left_column: diagnosis_id
+        right_column: diagnosis_id
+
+verified_queries:
+  - name: common_diagnoses
+    question: What are the most common diagnoses?
+    use_as_onboarding_question: true
+    sql: |
+      SELECT diagnosis_name, COUNT(*) AS patient_count, severity
+      FROM HEALTHCARE_AI_DEMO.CORE.DIAGNOSES
+      GROUP BY diagnosis_name, severity
+      ORDER BY patient_count DESC
+      LIMIT 10
+
+  - name: revenue_by_department
+    question: Show me total revenue by department
+    use_as_onboarding_question: true
+    sql: |
+      SELECT a.department,
+             SUM(b.total_amount) AS total_revenue,
+             SUM(b.insurance_covered) AS insurance_paid,
+             SUM(b.patient_due) AS patient_responsibility
+      FROM HEALTHCARE_AI_DEMO.CORE.BILLING b
+      JOIN HEALTHCARE_AI_DEMO.CORE.APPOINTMENTS a ON b.appointment_id = a.appointment_id
+      GROUP BY a.department
+      ORDER BY total_revenue DESC
+
+  - name: upcoming_appointments
+    question: Which patients have upcoming scheduled appointments?
+    use_as_onboarding_question: true
+    sql: |
+      SELECT p.first_name || ' ' || p.last_name AS patient_name,
+             a.appointment_date,
+             a.department,
+             a.appointment_type,
+             d.first_name || ' ' || d.last_name AS doctor_name
+      FROM HEALTHCARE_AI_DEMO.CORE.APPOINTMENTS a
+      JOIN HEALTHCARE_AI_DEMO.CORE.PATIENTS p ON a.patient_id = p.patient_id
+      JOIN HEALTHCARE_AI_DEMO.CORE.DOCTORS d ON a.doctor_id = d.doctor_id
+      WHERE a.status = 'scheduled'
+      ORDER BY a.appointment_date
+
+  - name: cost_by_insurance
+    question: What is the average cost per visit by insurance provider?
+    sql: |
+      SELECT p.insurance_provider,
+             COUNT(DISTINCT b.billing_id) AS total_bills,
+             AVG(b.total_amount) AS avg_total_cost,
+             AVG(b.insurance_covered) AS avg_insurance_covered,
+             AVG(b.patient_due) AS avg_patient_due
+      FROM HEALTHCARE_AI_DEMO.CORE.BILLING b
+      JOIN HEALTHCARE_AI_DEMO.CORE.PATIENTS p ON b.patient_id = p.patient_id
+      GROUP BY p.insurance_provider
+      ORDER BY avg_total_cost DESC
+
+  - name: chronic_conditions
+    question: How many patients have chronic conditions?
+    sql: |
+      SELECT d.diagnosis_name, d.severity,
+             COUNT(DISTINCT d.patient_id) AS patient_count
+      FROM HEALTHCARE_AI_DEMO.CORE.DIAGNOSES d
+      WHERE d.status = 'chronic'
+      GROUP BY d.diagnosis_name, d.severity
+      ORDER BY patient_count DESC
+
+  - name: top_medications
+    question: What are the top prescribed medications?
+    use_as_onboarding_question: true
+    sql: |
+      SELECT medication_name, dosage, frequency,
+             COUNT(*) AS prescription_count,
+             COUNT(CASE WHEN status = 'active' THEN 1 END) AS active_count
+      FROM HEALTHCARE_AI_DEMO.CORE.PRESCRIPTIONS
+      GROUP BY medication_name, dosage, frequency
+      ORDER BY prescription_count DESC
+
+  - name: billing_status
+    question: Show billing status breakdown
+    sql: |
+      SELECT payment_status,
+             COUNT(*) AS record_count,
+             SUM(total_amount) AS total_amount,
+             SUM(patient_due) AS total_patient_due
+      FROM HEALTHCARE_AI_DEMO.CORE.BILLING
+      GROUP BY payment_status
+      ORDER BY total_amount DESC
+
+  - name: busiest_doctors
+    question: Which doctors see the most patients?
+    sql: |
+      SELECT d.first_name || ' ' || d.last_name AS doctor_name,
+             d.specialty,
+             d.department,
+             COUNT(DISTINCT a.appointment_id) AS total_appointments,
+             COUNT(DISTINCT a.patient_id) AS unique_patients
+      FROM HEALTHCARE_AI_DEMO.CORE.DOCTORS d
+      JOIN HEALTHCARE_AI_DEMO.CORE.APPOINTMENTS a ON d.doctor_id = a.doctor_id
+      WHERE a.status = 'completed'
+      GROUP BY d.first_name, d.last_name, d.specialty, d.department
+      ORDER BY total_appointments DESC
+
+  - name: monthly_revenue_trend
+    question: What is the monthly revenue trend?
+    sql: |
+      SELECT DATE_TRUNC('month', billed_at) AS billing_month,
+             COUNT(*) AS bill_count,
+             SUM(total_amount) AS total_revenue,
+             SUM(insurance_covered) AS insurance_revenue,
+             SUM(patient_due) AS patient_revenue
+      FROM HEALTHCARE_AI_DEMO.CORE.BILLING
+      GROUP BY billing_month
+      ORDER BY billing_month
+
+  - name: patient_demographics
+    question: What is the patient demographic breakdown?
+    sql: |
+      SELECT gender,
+             COUNT(*) AS patient_count,
+             AVG(DATEDIFF('year', date_of_birth, CURRENT_DATE())) AS avg_age,
+             COUNT(DISTINCT insurance_provider) AS insurance_providers
+      FROM HEALTHCARE_AI_DEMO.CORE.PATIENTS
+      GROUP BY gender

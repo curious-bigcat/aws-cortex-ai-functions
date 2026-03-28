@@ -1,0 +1,38 @@
+# Dependencies
+node_modules/
+frontend/node_modules/
+infrastructure/cdk/node_modules/
+
+# Build output
+frontend/dist/
+infrastructure/cdk/cdk.out/
+
+# Generated sample files
+sample-files/
+
+# Environment files
+.env
+.env.local
+.env.production
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+
+# Secrets (never commit)
+*.p8
+*.pem
+credentials.json
+
+# CDK
+cdk.context.json

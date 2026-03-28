@@ -1,0 +1,163 @@
+-- Sample Data for Healthcare AI Demo
+USE ROLE HEALTHCARE_ADMIN;
+USE DATABASE HEALTHCARE_AI_DEMO;
+USE SCHEMA CORE;
+USE WAREHOUSE HEALTHCARE_AI_WH;
+
+-- Doctors
+INSERT INTO doctors VALUES
+    (1, 'Sarah', 'Chen', 'Cardiology', 'Cardiology', 'MD-2019-4521', '555-0101', 'sarah.chen@hospital.com'),
+    (2, 'James', 'Wilson', 'Internal Medicine', 'General Medicine', 'MD-2015-8734', '555-0102', 'james.wilson@hospital.com'),
+    (3, 'Maria', 'Rodriguez', 'Neurology', 'Neurology', 'MD-2018-2156', '555-0103', 'maria.rodriguez@hospital.com'),
+    (4, 'David', 'Park', 'Orthopedics', 'Orthopedics', 'MD-2020-6789', '555-0104', 'david.park@hospital.com'),
+    (5, 'Emily', 'Thompson', 'Pediatrics', 'Pediatrics', 'MD-2017-3345', '555-0105', 'emily.thompson@hospital.com'),
+    (6, 'Robert', 'Kumar', 'Oncology', 'Oncology', 'MD-2016-9012', '555-0106', 'robert.kumar@hospital.com'),
+    (7, 'Lisa', 'Patel', 'Dermatology', 'Dermatology', 'MD-2021-5678', '555-0107', 'lisa.patel@hospital.com'),
+    (8, 'Michael', 'Johnson', 'Emergency Medicine', 'Emergency', 'MD-2014-1234', '555-0108', 'michael.johnson@hospital.com');
+
+-- Patients
+INSERT INTO patients VALUES
+    (1, 'John', 'Smith', '1985-03-15', 'Male', 'O+', 'BlueCross BlueShield', 'BCBS-100001', '555-1001', 'john.smith@email.com', '123 Oak Street', 'Seattle', 'WA', '98101', 'Jane Smith: 555-1002', CURRENT_TIMESTAMP()),
+    (2, 'Maria', 'Garcia', '1990-07-22', 'Female', 'A+', 'Aetna', 'AET-200002', '555-1003', 'maria.garcia@email.com', '456 Pine Avenue', 'Portland', 'OR', '97201', 'Carlos Garcia: 555-1004', CURRENT_TIMESTAMP()),
+    (3, 'Robert', 'Lee', '1978-11-08', 'Male', 'B+', 'UnitedHealth', 'UHC-300003', '555-1005', 'robert.lee@email.com', '789 Maple Drive', 'San Francisco', 'CA', '94102', 'Susan Lee: 555-1006', CURRENT_TIMESTAMP()),
+    (4, 'Jennifer', 'Williams', '1995-01-30', 'Female', 'AB-', 'Cigna', 'CIG-400004', '555-1007', 'jennifer.w@email.com', '321 Elm Court', 'Denver', 'CO', '80201', 'Mark Williams: 555-1008', CURRENT_TIMESTAMP()),
+    (5, 'Michael', 'Brown', '1962-06-14', 'Male', 'O-', 'Medicare', 'MCR-500005', '555-1009', 'michael.brown@email.com', '654 Cedar Lane', 'Phoenix', 'AZ', '85001', 'Patricia Brown: 555-1010', CURRENT_TIMESTAMP()),
+    (6, 'Sarah', 'Johnson', '1988-09-03', 'Female', 'A-', 'BlueCross BlueShield', 'BCBS-100006', '555-1011', 'sarah.j@email.com', '987 Birch Road', 'Austin', 'TX', '73301', 'Tom Johnson: 555-1012', CURRENT_TIMESTAMP()),
+    (7, 'David', 'Martinez', '1975-12-20', 'Male', 'B-', 'Aetna', 'AET-200007', '555-1013', 'david.m@email.com', '147 Walnut Street', 'Chicago', 'IL', '60601', 'Ana Martinez: 555-1014', CURRENT_TIMESTAMP()),
+    (8, 'Emily', 'Davis', '2001-04-18', 'Female', 'O+', 'UnitedHealth', 'UHC-300008', '555-1015', 'emily.davis@email.com', '258 Spruce Ave', 'Miami', 'FL', '33101', 'Karen Davis: 555-1016', CURRENT_TIMESTAMP()),
+    (9, 'James', 'Anderson', '1970-08-25', 'Male', 'A+', 'Cigna', 'CIG-400009', '555-1017', 'james.a@email.com', '369 Ash Boulevard', 'Boston', 'MA', '02101', 'Linda Anderson: 555-1018', CURRENT_TIMESTAMP()),
+    (10, 'Amanda', 'Taylor', '1993-02-11', 'Female', 'AB+', 'BlueCross BlueShield', 'BCBS-100010', '555-1019', 'amanda.t@email.com', '741 Oak Hill Road', 'Nashville', 'TN', '37201', 'Brian Taylor: 555-1020', CURRENT_TIMESTAMP()),
+    (11, 'Christopher', 'Thomas', '1982-05-07', 'Male', 'O+', 'Aetna', 'AET-200011', '555-1021', 'chris.t@email.com', '852 Pine View', 'Atlanta', 'GA', '30301', 'Michelle Thomas: 555-1022', CURRENT_TIMESTAMP()),
+    (12, 'Jessica', 'Moore', '1998-10-16', 'Female', 'B+', 'UnitedHealth', 'UHC-300012', '555-1023', 'jessica.m@email.com', '963 Maple Court', 'Minneapolis', 'MN', '55401', 'Ryan Moore: 555-1024', CURRENT_TIMESTAMP()),
+    (13, 'Daniel', 'White', '1967-03-29', 'Male', 'A-', 'Medicare', 'MCR-500013', '555-1025', 'daniel.w@email.com', '159 Cedar Path', 'Detroit', 'MI', '48201', 'Carol White: 555-1026', CURRENT_TIMESTAMP()),
+    (14, 'Rachel', 'Harris', '1991-08-05', 'Female', 'O-', 'Cigna', 'CIG-400014', '555-1027', 'rachel.h@email.com', '357 Elm Avenue', 'Philadelphia', 'PA', '19101', 'Steve Harris: 555-1028', CURRENT_TIMESTAMP()),
+    (15, 'Kevin', 'Clark', '1956-01-12', 'Male', 'AB-', 'Medicare', 'MCR-500015', '555-1029', 'kevin.c@email.com', '468 Birch Lane', 'San Diego', 'CA', '92101', 'Margaret Clark: 555-1030', CURRENT_TIMESTAMP()),
+    (16, 'Stephanie', 'Lewis', '1987-07-19', 'Female', 'B-', 'BlueCross BlueShield', 'BCBS-100016', '555-1031', 'steph.l@email.com', '579 Walnut Circle', 'Dallas', 'TX', '75201', 'Greg Lewis: 555-1032', CURRENT_TIMESTAMP()),
+    (17, 'Andrew', 'Robinson', '1973-11-23', 'Male', 'O+', 'Aetna', 'AET-200017', '555-1033', 'andrew.r@email.com', '681 Spruce Drive', 'Houston', 'TX', '77001', 'Nancy Robinson: 555-1034', CURRENT_TIMESTAMP()),
+    (18, 'Nicole', 'Walker', '2003-06-08', 'Female', 'A+', 'UnitedHealth', 'UHC-300018', '555-1035', 'nicole.w@email.com', '792 Ash Street', 'Raleigh', 'NC', '27601', 'Paul Walker: 555-1036', CURRENT_TIMESTAMP()),
+    (19, 'Thomas', 'Hall', '1965-09-14', 'Male', 'B+', 'Medicare', 'MCR-500019', '555-1037', 'thomas.h@email.com', '814 Oak Terrace', 'Columbus', 'OH', '43201', 'Betty Hall: 555-1038', CURRENT_TIMESTAMP()),
+    (20, 'Laura', 'Allen', '1996-12-01', 'Female', 'O+', 'Cigna', 'CIG-400020', '555-1039', 'laura.a@email.com', '925 Pine Ridge', 'Charlotte', 'NC', '28201', 'Derek Allen: 555-1040', CURRENT_TIMESTAMP());
+
+-- Appointments
+INSERT INTO appointments VALUES
+    (1001, 1, 2, 'General Medicine', '2024-06-15 09:00:00', 'checkup', 'completed', 30, 'Annual physical exam. Patient reports occasional headaches.', CURRENT_TIMESTAMP()),
+    (1002, 2, 1, 'Cardiology', '2024-06-18 10:30:00', 'specialist', 'completed', 45, 'Referred for chest pain evaluation. ECG normal.', CURRENT_TIMESTAMP()),
+    (1003, 3, 3, 'Neurology', '2024-07-02 14:00:00', 'specialist', 'completed', 60, 'Evaluation for recurring migraines. MRI ordered.', CURRENT_TIMESTAMP()),
+    (1004, 4, 2, 'General Medicine', '2024-07-10 11:00:00', 'checkup', 'completed', 30, 'Routine checkup. All vitals normal.', CURRENT_TIMESTAMP()),
+    (1005, 5, 1, 'Cardiology', '2024-07-15 09:30:00', 'follow-up', 'completed', 45, 'Follow-up for hypertension management. BP improved.', CURRENT_TIMESTAMP()),
+    (1006, 6, 4, 'Orthopedics', '2024-07-22 13:00:00', 'specialist', 'completed', 40, 'Knee pain evaluation. X-ray shows mild osteoarthritis.', CURRENT_TIMESTAMP()),
+    (1007, 7, 2, 'General Medicine', '2024-08-05 10:00:00', 'checkup', 'completed', 30, 'Diabetes management review. A1C at 7.2%.', CURRENT_TIMESTAMP()),
+    (1008, 8, 5, 'Pediatrics', '2024-08-12 09:00:00', 'checkup', 'completed', 25, 'Well-child visit. Vaccinations up to date.', CURRENT_TIMESTAMP()),
+    (1009, 9, 6, 'Oncology', '2024-08-20 14:30:00', 'specialist', 'completed', 60, 'Cancer screening follow-up. Results negative.', CURRENT_TIMESTAMP()),
+    (1010, 10, 7, 'Dermatology', '2024-09-03 11:30:00', 'specialist', 'completed', 30, 'Skin lesion evaluation. Biopsy performed.', CURRENT_TIMESTAMP()),
+    (1011, 1, 1, 'Cardiology', '2024-09-10 09:00:00', 'specialist', 'completed', 45, 'Stress test ordered. Results within normal limits.', CURRENT_TIMESTAMP()),
+    (1012, 11, 2, 'General Medicine', '2024-09-15 10:00:00', 'checkup', 'completed', 30, 'New patient intake. History of asthma.', CURRENT_TIMESTAMP()),
+    (1013, 12, 3, 'Neurology', '2024-09-22 15:00:00', 'emergency', 'completed', 90, 'Presented with severe vertigo. CT scan clear.', CURRENT_TIMESTAMP()),
+    (1014, 13, 2, 'General Medicine', '2024-10-01 09:30:00', 'follow-up', 'completed', 30, 'Cholesterol management follow-up. Statin adjusted.', CURRENT_TIMESTAMP()),
+    (1015, 14, 1, 'Cardiology', '2024-10-08 11:00:00', 'specialist', 'completed', 45, 'Echo review. Mild mitral valve regurgitation.', CURRENT_TIMESTAMP()),
+    (1016, 15, 8, 'Emergency', '2024-10-15 02:00:00', 'emergency', 'completed', 120, 'Fall injury. X-ray confirms fractured wrist.', CURRENT_TIMESTAMP()),
+    (1017, 16, 7, 'Dermatology', '2024-10-20 14:00:00', 'specialist', 'completed', 30, 'Eczema flare-up. Treatment plan updated.', CURRENT_TIMESTAMP()),
+    (1018, 17, 2, 'General Medicine', '2024-11-01 09:00:00', 'checkup', 'completed', 30, 'Annual wellness visit. Flu vaccine administered.', CURRENT_TIMESTAMP()),
+    (1019, 18, 5, 'Pediatrics', '2024-11-08 10:30:00', 'checkup', 'completed', 25, 'Sports physical clearance. All clear.', CURRENT_TIMESTAMP()),
+    (1020, 19, 6, 'Oncology', '2024-11-15 13:00:00', 'follow-up', 'completed', 60, 'PSA monitoring. Levels stable.', CURRENT_TIMESTAMP()),
+    (1021, 20, 2, 'General Medicine', '2024-11-22 09:30:00', 'checkup', 'completed', 30, 'Anxiety management consultation.', CURRENT_TIMESTAMP()),
+    (1022, 1, 3, 'Neurology', '2024-12-03 14:00:00', 'specialist', 'completed', 45, 'Follow-up for headaches. Preventive medication prescribed.', CURRENT_TIMESTAMP()),
+    (1023, 2, 2, 'General Medicine', '2024-12-10 10:00:00', 'follow-up', 'completed', 30, 'Post-cardiac evaluation follow-up. Stable.', CURRENT_TIMESTAMP()),
+    (1024, 3, 3, 'Neurology', '2024-12-18 11:00:00', 'follow-up', 'completed', 45, 'MRI results review. No abnormalities.', CURRENT_TIMESTAMP()),
+    (1025, 4, 4, 'Orthopedics', '2025-01-08 09:00:00', 'specialist', 'completed', 40, 'Shoulder pain. Rotator cuff strain diagnosed.', CURRENT_TIMESTAMP()),
+    (1026, 5, 1, 'Cardiology', '2025-01-15 10:30:00', 'follow-up', 'completed', 45, 'Quarterly BP check. Well controlled.', CURRENT_TIMESTAMP()),
+    (1027, 6, 4, 'Orthopedics', '2025-01-22 13:30:00', 'follow-up', 'completed', 30, 'PT progress review. Good improvement.', CURRENT_TIMESTAMP()),
+    (1028, 7, 2, 'General Medicine', '2025-02-05 09:00:00', 'follow-up', 'completed', 30, 'Diabetes follow-up. A1C improved to 6.8%.', CURRENT_TIMESTAMP()),
+    (1029, 8, 8, 'Emergency', '2025-02-12 18:00:00', 'emergency', 'completed', 60, 'High fever and rash. Viral infection diagnosed.', CURRENT_TIMESTAMP()),
+    (1030, 9, 2, 'General Medicine', '2025-02-20 11:00:00', 'checkup', 'completed', 30, 'Routine lab review. All normal.', CURRENT_TIMESTAMP()),
+    (1031, 10, 7, 'Dermatology', '2025-03-01 14:00:00', 'follow-up', 'completed', 30, 'Biopsy results: benign. No action needed.', CURRENT_TIMESTAMP()),
+    (1032, 11, 1, 'Cardiology', '2025-03-10 09:30:00', 'specialist', 'completed', 45, 'Cardiac evaluation. Baseline echo ordered.', CURRENT_TIMESTAMP()),
+    (1033, 12, 2, 'General Medicine', '2025-03-15 10:00:00', 'follow-up', 'completed', 30, 'Vertigo resolved. Vestibular rehab effective.', CURRENT_TIMESTAMP()),
+    (1034, 13, 6, 'Oncology', '2025-03-22 13:00:00', 'specialist', 'completed', 60, 'Prostate screening. Biopsy recommended.', CURRENT_TIMESTAMP()),
+    (1035, 14, 2, 'General Medicine', '2025-04-01 09:00:00', 'checkup', 'completed', 30, 'Wellness visit. Mental health screening.', CURRENT_TIMESTAMP()),
+    (1036, 15, 4, 'Orthopedics', '2025-04-08 11:00:00', 'follow-up', 'completed', 40, 'Wrist fracture healed. Cast removed.', CURRENT_TIMESTAMP()),
+    (1037, 16, 2, 'General Medicine', '2025-04-15 09:30:00', 'checkup', 'completed', 30, 'Annual physical. Vitamin D deficiency noted.', CURRENT_TIMESTAMP()),
+    (1038, 17, 1, 'Cardiology', '2025-05-01 10:00:00', 'specialist', 'completed', 45, 'Palpitations evaluation. Holter monitor ordered.', CURRENT_TIMESTAMP()),
+    (1039, 18, 2, 'General Medicine', '2025-05-10 14:00:00', 'checkup', 'completed', 25, 'College entrance physical. All clear.', CURRENT_TIMESTAMP()),
+    (1040, 19, 2, 'General Medicine', '2025-05-20 09:00:00', 'follow-up', 'completed', 30, 'Joint pain. Rheumatology referral.', CURRENT_TIMESTAMP()),
+    (1041, 20, 3, 'Neurology', '2025-06-01 11:30:00', 'specialist', 'scheduled', 45, 'Evaluation for persistent insomnia.', CURRENT_TIMESTAMP()),
+    (1042, 1, 2, 'General Medicine', '2025-06-15 09:00:00', 'checkup', 'scheduled', 30, 'Annual physical exam.', CURRENT_TIMESTAMP()),
+    (1043, 5, 1, 'Cardiology', '2025-06-20 10:30:00', 'follow-up', 'scheduled', 45, 'Quarterly cardiac review.', CURRENT_TIMESTAMP()),
+    (1044, 7, 2, 'General Medicine', '2025-07-01 09:00:00', 'follow-up', 'scheduled', 30, 'Diabetes management.', CURRENT_TIMESTAMP()),
+    (1045, 13, 6, 'Oncology', '2025-07-10 13:00:00', 'follow-up', 'scheduled', 60, 'Biopsy results review.', CURRENT_TIMESTAMP());
+
+-- Diagnoses
+INSERT INTO diagnoses VALUES
+    (1, 1, 1001, 2, 'G43.909', 'Migraine, unspecified', 'mild', 'active', '2024-06-15 09:00:00', NULL),
+    (2, 2, 1002, 1, 'R07.9', 'Chest pain, unspecified', 'moderate', 'resolved', '2024-06-18 10:30:00', '2024-12-10 10:00:00'),
+    (3, 3, 1003, 3, 'G43.909', 'Migraine, unspecified', 'moderate', 'active', '2024-07-02 14:00:00', NULL),
+    (4, 5, 1005, 1, 'I10', 'Essential hypertension', 'moderate', 'chronic', '2024-07-15 09:30:00', NULL),
+    (5, 6, 1006, 4, 'M17.11', 'Primary osteoarthritis, right knee', 'mild', 'chronic', '2024-07-22 13:00:00', NULL),
+    (6, 7, 1007, 2, 'E11.65', 'Type 2 diabetes with hyperglycemia', 'moderate', 'chronic', '2024-08-05 10:00:00', NULL),
+    (7, 9, 1009, 6, 'Z12.31', 'Encounter for screening mammogram', 'mild', 'resolved', '2024-08-20 14:30:00', '2024-08-20 14:30:00'),
+    (8, 10, 1010, 7, 'D22.9', 'Melanocytic nevi, unspecified', 'mild', 'resolved', '2024-09-03 11:30:00', '2025-03-01 14:00:00'),
+    (9, 11, 1012, 2, 'J45.20', 'Mild intermittent asthma', 'mild', 'chronic', '2024-09-15 10:00:00', NULL),
+    (10, 12, 1013, 3, 'H81.10', 'Benign paroxysmal vertigo', 'moderate', 'resolved', '2024-09-22 15:00:00', '2025-03-15 10:00:00'),
+    (11, 13, 1014, 2, 'E78.00', 'Pure hypercholesterolemia', 'moderate', 'chronic', '2024-10-01 09:30:00', NULL),
+    (12, 14, 1015, 1, 'I34.0', 'Mitral valve insufficiency', 'mild', 'chronic', '2024-10-08 11:00:00', NULL),
+    (13, 15, 1016, 8, 'S52.501A', 'Fracture of lower end of radius', 'severe', 'resolved', '2024-10-15 02:00:00', '2025-04-08 11:00:00'),
+    (14, 16, 1017, 7, 'L30.9', 'Dermatitis, unspecified', 'mild', 'active', '2024-10-20 14:00:00', NULL),
+    (15, 8, 1029, 8, 'B34.9', 'Viral infection, unspecified', 'moderate', 'resolved', '2025-02-12 18:00:00', '2025-02-20 00:00:00'),
+    (16, 4, 1025, 4, 'M75.110', 'Rotator cuff tear, right shoulder', 'moderate', 'active', '2025-01-08 09:00:00', NULL),
+    (17, 17, 1038, 1, 'R00.2', 'Palpitations', 'mild', 'active', '2025-05-01 10:00:00', NULL),
+    (18, 19, 1040, 2, 'M25.50', 'Pain in unspecified joint', 'moderate', 'active', '2025-05-20 09:00:00', NULL),
+    (19, 20, 1021, 2, 'F41.1', 'Generalized anxiety disorder', 'moderate', 'active', '2024-11-22 09:30:00', NULL),
+    (20, 13, 1034, 6, 'Z12.5', 'Screening for prostate cancer', 'moderate', 'active', '2025-03-22 13:00:00', NULL);
+
+-- Billing
+INSERT INTO billing VALUES
+    (1, 1, 1001, '99395', 'Preventive visit, 18-39', 250.00, 200.00, 50.00, 'paid', '2024-06-15', '2024-07-01'),
+    (2, 2, 1002, '93000', 'Electrocardiogram', 450.00, 360.00, 90.00, 'paid', '2024-06-18', '2024-07-15'),
+    (3, 3, 1003, '99213', 'Office visit, established', 350.00, 280.00, 70.00, 'paid', '2024-07-02', '2024-07-20'),
+    (4, 3, 1003, '70553', 'MRI brain w/ and w/o contrast', 2800.00, 2240.00, 560.00, 'paid', '2024-07-02', '2024-08-01'),
+    (5, 4, 1004, '99395', 'Preventive visit, 18-39', 250.00, 225.00, 25.00, 'paid', '2024-07-10', '2024-07-25'),
+    (6, 5, 1005, '99214', 'Office visit, moderate', 300.00, 240.00, 60.00, 'paid', '2024-07-15', '2024-08-01'),
+    (7, 6, 1006, '73560', 'Knee X-ray', 450.00, 337.50, 112.50, 'paid', '2024-07-22', '2024-08-10'),
+    (8, 7, 1007, '99214', 'Office visit, moderate', 300.00, 240.00, 60.00, 'paid', '2024-08-05', '2024-08-20'),
+    (9, 7, 1007, '83036', 'Hemoglobin A1C test', 75.00, 67.50, 7.50, 'paid', '2024-08-05', '2024-08-20'),
+    (10, 8, 1008, '99393', 'Well-child visit', 200.00, 200.00, 0.00, 'paid', '2024-08-12', '2024-08-30'),
+    (11, 9, 1009, '77067', 'Screening mammography', 350.00, 350.00, 0.00, 'paid', '2024-08-20', '2024-09-05'),
+    (12, 10, 1010, '11102', 'Skin biopsy', 550.00, 412.50, 137.50, 'paid', '2024-09-03', '2024-09-20'),
+    (13, 1, 1011, '93015', 'Cardiovascular stress test', 800.00, 640.00, 160.00, 'paid', '2024-09-10', '2024-10-01'),
+    (14, 11, 1012, '99203', 'New patient visit', 300.00, 240.00, 60.00, 'paid', '2024-09-15', '2024-10-01'),
+    (15, 12, 1013, '99285', 'Emergency visit, high', 1200.00, 840.00, 360.00, 'paid', '2024-09-22', '2024-10-15'),
+    (16, 12, 1013, '70450', 'CT scan head', 1500.00, 1050.00, 450.00, 'paid', '2024-09-22', '2024-10-15'),
+    (17, 13, 1014, '99213', 'Office visit, established', 250.00, 200.00, 50.00, 'paid', '2024-10-01', '2024-10-15'),
+    (18, 14, 1015, '93306', 'Echocardiogram', 1200.00, 960.00, 240.00, 'paid', '2024-10-08', '2024-11-01'),
+    (19, 15, 1016, '99285', 'Emergency visit, high', 1500.00, 1200.00, 300.00, 'paid', '2024-10-15', '2024-11-01'),
+    (20, 15, 1016, '73100', 'Wrist X-ray', 350.00, 280.00, 70.00, 'paid', '2024-10-15', '2024-11-01'),
+    (21, 15, 1016, '25600', 'Closed treatment distal radial fracture', 2500.00, 2000.00, 500.00, 'paid', '2024-10-15', '2024-11-15'),
+    (22, 16, 1017, '99213', 'Office visit, established', 250.00, 187.50, 62.50, 'paid', '2024-10-20', '2024-11-05'),
+    (23, 17, 1018, '99395', 'Preventive visit, 40-64', 275.00, 220.00, 55.00, 'paid', '2024-11-01', '2024-11-20'),
+    (24, 18, 1019, '99395', 'Preventive visit, 18-39', 250.00, 200.00, 50.00, 'paid', '2024-11-08', '2024-11-25'),
+    (25, 19, 1020, '84153', 'PSA test', 100.00, 100.00, 0.00, 'paid', '2024-11-15', '2024-12-01'),
+    (26, 20, 1021, '99214', 'Office visit, moderate', 300.00, 225.00, 75.00, 'paid', '2024-11-22', '2024-12-10'),
+    (27, 5, 1026, '99214', 'Office visit, moderate', 300.00, 240.00, 60.00, 'paid', '2025-01-15', '2025-02-01'),
+    (28, 4, 1025, '73030', 'Shoulder X-ray', 400.00, 360.00, 40.00, 'paid', '2025-01-08', '2025-01-25'),
+    (29, 7, 1028, '99214', 'Office visit, moderate', 300.00, 240.00, 60.00, 'paid', '2025-02-05', '2025-02-20'),
+    (30, 7, 1028, '83036', 'Hemoglobin A1C test', 75.00, 67.50, 7.50, 'paid', '2025-02-05', '2025-02-20'),
+    (31, 8, 1029, '99284', 'Emergency visit, moderate', 900.00, 720.00, 180.00, 'paid', '2025-02-12', '2025-03-01'),
+    (32, 13, 1034, '99214', 'Office visit, moderate', 300.00, 240.00, 60.00, 'pending', '2025-03-22', NULL),
+    (33, 13, 1034, '55700', 'Prostate biopsy', 3500.00, 2800.00, 700.00, 'pending', '2025-03-22', NULL),
+    (34, 15, 1036, '99213', 'Office visit, established', 250.00, 200.00, 50.00, 'paid', '2025-04-08', '2025-04-25'),
+    (35, 17, 1038, '93224', 'Holter monitor, 24 hours', 600.00, 480.00, 120.00, 'pending', '2025-05-01', NULL);
+
+-- Prescriptions
+INSERT INTO prescriptions VALUES
+    (1, 1, 3, 1, 'Sumatriptan', '50mg', 'As needed for migraine', '2024-06-15', '2025-06-15', 5, 'active', '2024-06-15 09:00:00'),
+    (2, 5, 1, 4, 'Lisinopril', '10mg', 'Once daily', '2024-07-15', '2025-07-15', 11, 'active', '2024-07-15 09:30:00'),
+    (3, 5, 1, 4, 'Amlodipine', '5mg', 'Once daily', '2024-07-15', '2025-07-15', 11, 'active', '2024-07-15 09:30:00'),
+    (4, 7, 2, 6, 'Metformin', '500mg', 'Twice daily with meals', '2024-08-05', '2025-08-05', 11, 'active', '2024-08-05 10:00:00'),
+    (5, 3, 3, 3, 'Topiramate', '25mg', 'Once daily, titrate up', '2024-12-03', '2025-06-03', 5, 'active', '2024-12-03 14:00:00'),
+    (6, 13, 2, 11, 'Atorvastatin', '20mg', 'Once daily at bedtime', '2024-10-01', '2025-10-01', 11, 'active', '2024-10-01 09:30:00'),
+    (7, 16, 7, 14, 'Triamcinolone cream', '0.1%', 'Apply twice daily', '2024-10-20', '2025-01-20', 2, 'active', '2024-10-20 14:00:00'),
+    (8, 11, 2, 9, 'Albuterol inhaler', '90mcg', '2 puffs as needed', '2024-09-15', '2025-09-15', 3, 'active', '2024-09-15 10:00:00'),
+    (9, 20, 2, 19, 'Sertraline', '50mg', 'Once daily in morning', '2024-11-22', '2025-11-22', 11, 'active', '2024-11-22 09:30:00'),
+    (10, 15, 4, 13, 'Ibuprofen', '600mg', 'Three times daily with food', '2024-10-15', '2024-12-15', 0, 'completed', '2024-10-15 02:00:00');
+
+GRANT SELECT ON ALL TABLES IN SCHEMA HEALTHCARE_AI_DEMO.CORE TO ROLE HEALTHCARE_APP;
