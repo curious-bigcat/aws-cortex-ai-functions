@@ -1,0 +1,239 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Healthcare AI Demo - S3 + Lambda + CloudFront + Snowflake Cortex
+
+Parameters:
+  SnowflakeAccount:
+    Type: String
+    Description: "Snowflake account identifier (e.g. xy12345.us-east-1)"
+  SnowflakeUser:
+    Type: String
+    Default: HEALTHCARE_ADMIN
+    Description: Snowflake user for key-pair auth
+
+Globals:
+  Function:
+    Runtime: python3.12
+    Timeout: 300
+    MemorySize: 256
+
+Resources:
+  # ── S3: Healthcare data files ──
+  DataBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub healthcare-ai-data-${AWS::AccountId}
+      NotificationConfiguration:
+        EventBridgeConfiguration:
+          EventBridgeEnabled: true
+      CorsConfiguration:
+        CorsRules:
+          - AllowedHeaders: ['*']
+            AllowedMethods: [GET, PUT, POST]
+            AllowedOrigins: ['*']
+            MaxAge: 3600
+
+  # ── S3: Frontend static site ──
+  FrontendBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub healthcare-ai-frontend-${AWS::AccountId}
+
+  FrontendBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref FrontendBucket
+      PolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: cloudfront.amazonaws.com
+            Action: s3:GetObject
+            Resource: !Sub ${FrontendBucket.Arn}/*
+            Condition:
+              StringEquals:
+                AWS:SourceArn: !Sub arn:aws:cloudfront::${AWS::AccountId}:distribution/${CloudFrontDistribution}
+
+  # ── SNS Topic ──
+  FileNotificationTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: healthcare-file-notifications
+
+  # ── EventBridge: S3 Object Created → SNS ──
+  S3ObjectCreatedRule:
+    Type: AWS::Events::Rule
+    Properties:
+      Name: healthcare-s3-file-created
+      EventPattern:
+        source:
+          - aws.s3
+        detail-type:
+          - Object Created
+        detail:
+          bucket:
+            name:
+              - !Ref DataBucket
+          object:
+            key:
+              - prefix: documents/
+              - prefix: audio/
+      Targets:
+        - Arn: !Ref FileNotificationTopic
+          Id: SNSTarget
+
+  SNSTopicPolicy:
+    Type: AWS::SNS::TopicPolicy
+    Properties:
+      Topics:
+        - !Ref FileNotificationTopic
+      PolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: events.amazonaws.com
+            Action: sns:Publish
+            Resource: !Ref FileNotificationTopic
+
+  # ── Secrets Manager ──
+  SnowflakePrivateKeySecret:
+    Type: AWS::SecretsManager::Secret
+    Properties:
+      Name: healthcare-ai/snowflake-private-key
+      Description: RSA private key for Snowflake key-pair auth
+      SecretString: PLACEHOLDER-replace-after-deploy
+
+  SnowflakePATSecret:
+    Type: AWS::SecretsManager::Secret
+    Properties:
+      Name: healthcare-ai/snowflake-pat
+      Description: Snowflake Programmatic Access Token for Cortex Agent API
+      SecretString: PLACEHOLDER-replace-after-deploy
+
+  # ── Lambda: File Processor (SNS → Snowflake) ──
+  FileProcessorFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: healthcare-file-processor
+      CodeUri: lambda/file-processor/
+      Handler: handler.lambda_handler
+      Timeout: 300
+      Environment:
+        Variables:
+          SNOWFLAKE_ACCOUNT: !Ref SnowflakeAccount
+          SNOWFLAKE_USER: !Ref SnowflakeUser
+          SNOWFLAKE_PRIVATE_KEY_SECRET: !Ref SnowflakePrivateKeySecret
+          SNOWFLAKE_DATABASE: HEALTHCARE_AI_DEMO
+          SNOWFLAKE_SCHEMA: CORE
+          SNOWFLAKE_WAREHOUSE: HEALTHCARE_AI_WH
+      Policies:
+        - AWSSecretsManagerGetSecretValuePolicy:
+            SecretArn: !Ref SnowflakePrivateKeySecret
+      Events:
+        SNSTrigger:
+          Type: SNS
+          Properties:
+            Topic: !Ref FileNotificationTopic
+
+  # ── Lambda: API Proxy (Function URL → Cortex Agent + Upload) ──
+  ApiProxyFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: healthcare-api-proxy
+      CodeUri: lambda/api-proxy/
+      Handler: handler.lambda_handler
+      Timeout: 120
+      Environment:
+        Variables:
+          SNOWFLAKE_ACCOUNT: !Ref SnowflakeAccount
+          SNOWFLAKE_PAT_SECRET: !Ref SnowflakePATSecret
+          SNOWFLAKE_DATABASE: HEALTHCARE_AI_DEMO
+          SNOWFLAKE_SCHEMA: CORE
+          SNOWFLAKE_AGENT_NAME: HEALTHCARE_ASSISTANT
+          DATA_BUCKET: !Ref DataBucket
+      Policies:
+        - AWSSecretsManagerGetSecretValuePolicy:
+            SecretArn: !Ref SnowflakePATSecret
+        - S3CrudPolicy:
+            BucketName: !Ref DataBucket
+      FunctionUrlConfig:
+        AuthType: NONE
+        Cors:
+          AllowOrigins: ['*']
+          AllowMethods: ['POST', 'OPTIONS']
+          AllowHeaders: ['Content-Type']
+
+  # ── CloudFront Distribution ──
+  CloudFrontDistribution:
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      DistributionConfig:
+        Enabled: true
+        DefaultRootObject: index.html
+        Comment: Healthcare AI Demo
+
+        Origins:
+          # Frontend S3 origin
+          - Id: S3Frontend
+            DomainName: !GetAtt FrontendBucket.RegionalDomainName
+            OriginAccessControlId: !Ref FrontendOAC
+            S3OriginConfig:
+              OriginAccessIdentity: ''
+
+          # Lambda Function URL origin for /api/*
+          - Id: LambdaApi
+            DomainName: !Select
+              - 2
+              - !Split ['/', !GetAtt ApiProxyFunctionUrl.FunctionUrl]
+            CustomOriginConfig:
+              OriginProtocolPolicy: https-only
+              OriginSSLProtocols: [TLSv1.2]
+
+        DefaultCacheBehavior:
+          TargetOriginId: S3Frontend
+          ViewerProtocolPolicy: redirect-to-https
+          CachePolicyId: 658327ea-f89d-4fab-a63d-7e88639e58f6  # CachingOptimized
+          Compress: true
+
+        CacheBehaviors:
+          # /api/* → Lambda Function URL (no caching)
+          - PathPattern: /api/*
+            TargetOriginId: LambdaApi
+            ViewerProtocolPolicy: https-only
+            AllowedMethods: [GET, HEAD, OPTIONS, PUT, POST, PATCH, DELETE]
+            CachePolicyId: 4135ea2d-6df8-44a3-9df3-4b5a84be39ad  # CachingDisabled
+            OriginRequestPolicyId: b689b0a8-53d0-40ab-baf2-68738e2966ac  # AllViewerExceptHostHeader
+
+        # SPA fallback: serve index.html for 403/404
+        CustomErrorResponses:
+          - ErrorCode: 403
+            ResponseCode: 200
+            ResponsePagePath: /index.html
+            ErrorCachingMinTTL: 300
+          - ErrorCode: 404
+            ResponseCode: 200
+            ResponsePagePath: /index.html
+            ErrorCachingMinTTL: 300
+
+  FrontendOAC:
+    Type: AWS::CloudFront::OriginAccessControl
+    Properties:
+      OriginAccessControlConfig:
+        Name: !Sub healthcare-ai-oac-${AWS::AccountId}
+        OriginAccessControlOriginType: s3
+        SigningBehavior: always
+        SigningProtocol: sigv4
+
+Outputs:
+  CloudFrontUrl:
+    Value: !Sub https://${CloudFrontDistribution.DomainName}
+    Description: CloudFront URL - your app lives here
+  DataBucketName:
+    Value: !Ref DataBucket
+    Description: S3 bucket for healthcare files (PDFs, WAVs)
+  FrontendBucketName:
+    Value: !Ref FrontendBucket
+    Description: S3 bucket for frontend - deploy with 'aws s3 sync'
+  ApiProxyUrl:
+    Value: !GetAtt ApiProxyFunctionUrl.FunctionUrl
+    Description: Lambda Function URL (direct access, also proxied via CloudFront /api/*)

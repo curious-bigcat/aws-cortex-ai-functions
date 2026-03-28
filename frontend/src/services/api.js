@@ -1,27 +1,12 @@
-const API_BASE = import.meta.env.VITE_API_URL || "";
-
-async function getAuthHeaders() {
-  try {
-    const { fetchAuthSession } = await import("aws-amplify/auth");
-    const session = await fetchAuthSession();
-    const token = session.tokens?.idToken?.toString();
-    if (token) {
-      return { Authorization: `Bearer ${token}`, "Content-Type": "application/json" };
-    }
-  } catch (e) {
-    console.warn("Auth session not available, using unauthenticated mode");
-  }
-  return { "Content-Type": "application/json" };
-}
+const API_BASE = import.meta.env.VITE_API_URL || "/api";
 
 export async function queryAgent(message, threadId = null) {
-  const headers = await getAuthHeaders();
   const body = { message };
   if (threadId) body.thread_id = threadId;
 
-  const res = await fetch(`${API_BASE}/api/agent/query`, {
+  const res = await fetch(`${API_BASE}/agent/query`, {
     method: "POST",
-    headers,
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
   });
 
@@ -33,13 +18,12 @@ export async function queryAgent(message, threadId = null) {
   return res.json();
 }
 
-export async function getPresignedUploadUrl(filename, contentType) {
-  const headers = await getAuthHeaders();
-
-  const res = await fetch(`${API_BASE}/api/upload/presigned`, {
+export async function uploadFileToS3(file) {
+  const fileType = file.name.split(".").pop().toLowerCase();
+  const res = await fetch(`${API_BASE}/upload`, {
     method: "POST",
-    headers,
-    body: JSON.stringify({ filename, content_type: contentType }),
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ fileName: file.name, fileType }),
   });
 
   if (!res.ok) {
@@ -47,16 +31,9 @@ export async function getPresignedUploadUrl(filename, contentType) {
     throw new Error(`Presigned URL failed: ${res.status} - ${err}`);
   }
 
-  return res.json();
-}
+  const { uploadUrl, key } = await res.json();
 
-export async function uploadFileToS3(file) {
-  const prefix = file.type === "application/pdf" ? "documents/" : "audio/";
-  const key = prefix + file.name;
-
-  const { upload_url } = await getPresignedUploadUrl(key, file.type);
-
-  const uploadRes = await fetch(upload_url, {
+  const uploadRes = await fetch(uploadUrl, {
     method: "PUT",
     headers: { "Content-Type": file.type },
     body: file,
